@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -25,55 +25,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build Next.js application
-        run: npm run build
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist
-          path: .next
-          retention-days: 1
-
-  deploy-preview:
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.event_name != 'push' || github.ref != 'refs/heads/main'
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: .next
-
-      - name: Deploy preview to Cloudflare Pages
-        run: npx wrangler pages deploy .next --project-name=apex-web
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-
-  deploy-production:
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    environment:
-      name: production
-      url: ${{ steps.deploy.outputs.url }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: .next
-
-      - name: Deploy production to Cloudflare Pages
-        run: npx wrangler pages deploy .next --project-name=apex-web
+      - name: Build and Deploy to Cloudflare
+        run: npm run deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
