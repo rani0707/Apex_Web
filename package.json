@@ -1,0 +1,25 @@
+{
+  "name": "Apex_Web",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "security:audit": "npm audit --audit-level=moderate"
+  },
+  "dependencies": {
+    "@fontsource/pretendard": "^5.2.5",
+    "lucide-react": "^0.577.0",
+    "next": "^16.2.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^22.14.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "^5.8.3"
+  }
+}

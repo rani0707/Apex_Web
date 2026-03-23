@@ -1,0 +1,24 @@
+{
+  "awards": [
+    { "title": "Hackathon", "organization": "2025 학과 해커톤", "result": "최우수상", "year": "2025" },
+    { "title": "보안경진대회", "organization": "한국보안사무조합", "result": "입선", "year": "2025" },
+    { "title": "코드공모전", "organization": "삼성소프트웨어멤버십", "result": "장려상", "year": "2024" },
+    { "title": "CTF 본선", "organization": "KIT CTF", "result": "우수상", "year": "2024" },
+    { "title": "해킹방어대회", "organization": "서울시보안경진대회", "result": "입선", "year": "2024" },
+    { "title": "AI 챌린지", "organization": "NAVER AI Rush", "result": "본선진출", "year": "2024" },
+    { "title": "소프트웨어 경진대회", "organization": "한국소프트웨어진흥원", "result": "동상", "year": "2023" },
+    { "title": "보안문제 풀이", "organization": "KISA 해킹방어대회", "result": "입선", "year": "2023" },
+    { "title": "캡스톤 경진대회", "organization": "학과 캡스톤", "result": "최우수상", "year": "2023" },
+    { "title": "데이터톤", "organization": "한양대 데이터톤", "result": "장려상", "year": "2023" },
+    { "title": "해커톤", "organization": "LG전자 해커톤", "result": "본선진출", "year": "2023" },
+    { "title": "보안경진대회", "organization": "한국정보보호학회", "result": "입선", "year": "2022" },
+    { "title": "웹프로그래밍경진", "organization": "ACM-ICPC", "result": "동상", "year": "2022" },
+    { "title": "졸업작품경진대회", "organization": "학과 졸작경진", "result": "최우수상", "year": "2022" },
+    { "title": "AI 경진대회", "organization": "Google ML Bootcamp", "result": "수료", "year": "2022" },
+    { "title": "네트워크 경진", "organization": "KIT 네트워크 대회", "result": "우수상", "year": "2021" },
+    { "title": "리버싱 챌린지", "organization": "HackingCamp", "result": "입선", "year": "2021" },
+    { "title": "앱개발 챌린지", "organization": "Apple Developer Academy", "result": "수료", "year": "2021" },
+    { "title": "보안세미나", "organization": "KISEC", "result": "수료", "year": "2020" },
+    { "title": "기초프로그래밍경진", "organization": "학과 대항전", "result": "우수상", "year": "2020" }
+  ]
+}

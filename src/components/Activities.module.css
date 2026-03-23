@@ -1,0 +1,153 @@
+.section {
+  padding: var(--section-gap) 0;
+  background: var(--bg);
+}
+
+.container {
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 0 48px;
+}
+
+.sectionHead {
+  margin-bottom: 80px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: end;
+}
+
+.label {
+  grid-column: 1 / -1;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  color: var(--text-tertiary);
+  margin-bottom: 16px;
+}
+
+.title {
+  font-size: clamp(36px, 5vw, 56px);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  position: relative;
+  padding-bottom: 24px;
+}
+
+.title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 48px;
+  height: 2px;
+  background: var(--text-primary);
+}
+
+.subtitle {
+  font-size: 16px;
+  line-height: 1.8;
+  color: var(--text-secondary);
+}
+
+.trackList {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  background: var(--border);
+}
+
+.trackCard {
+  background: var(--bg);
+  padding: 48px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.trackCard:hover {
+  background: var(--surface);
+}
+
+.trackCard:hover .trackNum {
+  color: var(--accent);
+}
+
+.trackNum {
+  font-size: 64px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: var(--border);
+  transition: color 0.2s ease;
+}
+
+.trackIcon {
+  color: var(--text-primary);
+}
+
+.trackInfo {
+  border-top: 1px solid var(--border);
+  padding-top: 20px;
+}
+
+.trackTitle {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-bottom: 4px;
+}
+
+.trackSubtitle {
+  font-size: 13px;
+  color: var(--text-tertiary);
+}
+
+.trackTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tag {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  padding: 4px 12px;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.trackCard:hover .tag {
+  border-color: var(--text-tertiary);
+}
+
+.trackDesc {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text-secondary);
+  flex: 1;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 0 24px;
+  }
+
+  .sectionHead {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    margin-bottom: 48px;
+  }
+
+  .trackList {
+    grid-template-columns: 1fr;
+  }
+
+  .trackCard {
+    padding: 32px 24px;
+  }
+}

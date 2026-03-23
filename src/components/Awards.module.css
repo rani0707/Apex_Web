@@ -1,0 +1,144 @@
+.section {
+  padding: var(--section-gap) 0;
+  border-top: 1px solid var(--border);
+}
+
+.container {
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 0 48px;
+}
+
+.sectionHead {
+  margin-bottom: 64px;
+}
+
+.label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  color: var(--text-tertiary);
+  margin-bottom: 16px;
+}
+
+.title {
+  font-size: clamp(36px, 5vw, 56px);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  position: relative;
+  padding-bottom: 24px;
+  margin-bottom: 24px;
+}
+
+.title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 48px;
+  height: 2px;
+  background: var(--text-primary);
+}
+
+.subtitle {
+  font-size: 16px;
+  line-height: 1.8;
+  color: var(--text-secondary);
+}
+
+.awardsTable {
+  border: 1px solid var(--border);
+}
+
+.tableHeader {
+  display: grid;
+  grid-template-columns: 80px 1fr 1fr 120px;
+  padding: 16px 24px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  gap: 16px;
+}
+
+.headerYear,
+.headerTitle,
+.headerOrg,
+.headerResult {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--text-tertiary);
+}
+
+.tableBody {
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.tableRow {
+  display: grid;
+  grid-template-columns: 80px 1fr 1fr 120px;
+  padding: 18px 24px;
+  gap: 16px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s ease;
+}
+
+.tableRow:last-child {
+  border-bottom: none;
+}
+
+.tableRow:hover {
+  background: var(--surface);
+}
+
+.year {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+.awardTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.org {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.result {
+  display: flex;
+  align-items: center;
+}
+
+.resultBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 0 24px;
+  }
+
+  .tableHeader,
+  .tableRow {
+    grid-template-columns: 60px 1fr 100px;
+  }
+
+  .headerOrg,
+  .org {
+    display: none;
+  }
+
+  .tableBody {
+    max-height: 400px;
+  }
+}

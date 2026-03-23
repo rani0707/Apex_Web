@@ -1,0 +1,34 @@
+{
+  "contactEmail": "apex@yourdomain.ac.kr",
+  "recruitFormUrl": "raniweb.kr",
+  "isOpen": true,
+  "closedMessage": "현재는 모집 기간이 아닙니다. 다음 모집 일정은 추후 공지를 통해 안내드릴 예정입니다.",
+  "timeline": [
+    {
+      "period": "매년 1학기 / 2학기",
+      "title": "신규 구성원 모집",
+      "desc": "명지전문대 컴퓨터보안공학과 본과정 학생이면 누구나 지원 가능."
+    },
+    {
+      "period": "상시 운영",
+      "title": "정기 세션",
+      "desc": "매주 또는 매월 정기 세션을 통해 기술 수준을 향상."
+    },
+    {
+      "period": "상시 운영",
+      "title": "프로젝트 활동",
+      "desc": "팀별 및 개인 프로젝트를 진행."
+    },
+    {
+      "period": "상시 운영",
+      "title": "세미나",
+      "desc": "외부 해커톤, CTF 대회 참여."
+    }
+  ],
+  "perks": [
+    { "label": "멘토링", "icon": "users", "show": true },
+    { "label": "전공동아리실 제공", "icon": "mapPin", "show": true },
+    { "label": "정기 세션 운영", "icon": "calendar", "show": true },
+    { "label": "자율적 활동 시간", "icon": "clock", "show": true }
+  ]
+}
