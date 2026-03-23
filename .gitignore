@@ -32,3 +32,6 @@ next-env.d.ts
 
 # OpenNext
 .open-next
+
+# Vercel
+.vercel

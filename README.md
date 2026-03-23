@@ -209,16 +209,20 @@ src/
 
 ---
 
-## 배포하는 법 (Cloudflare Pages 기준)
+## 배포하는 법 (Vercel 기준)
 
 GitHub에 푸시하면 **GitHub Actions로 자동 배포**되도록 설정되어 있습니다.
 
 ### 처음 세팅할 때 필요한 것
 
-1. Cloudflare Pages에서 프로젝트 생성
-2. 아래 두 가지 **Repository Secrets** 등록:
-   - `CLOUDFLARE_API_TOKEN` — Cloudflare API 토큰
-   - `CLOUDFLARE_ACCOUNT_ID` — Cloudflare 계정 ID
+1. [Vercel](https://vercel.com)에서 GitHub 계정으로 로그인
+2. "Add New Project" → GitHub 레포지토리 선택
+3. Framework Preset이 "Next.js"로 자동 인식되는지 확인
+4. "Deploy" 버튼 클릭
+5. Vercel 대시보드에서 **Settings → General**으로 이동하여以下 세 가지 값을 **GitHub Secrets**에 등록:
+   - `VERCEL_ORG_ID` — Vercel Organization ID (`vercel deployments` 등에서 확인)
+   - `VERCEL_PROJECT_ID` — Vercel Project ID
+   - `VERCEL_TOKEN` — Vercel Access Token ([vercel.com/account/tokens](https://vercel.com/account/tokens)에서 생성)
 
 그 다음 `main` 브랜치에 푸시하면 알아서 빌드 → 배포됩니다.
 
