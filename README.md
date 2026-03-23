@@ -5,7 +5,7 @@
 ![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat-square)
 ![React](https://img.shields.io/badge/React-19-blue?style=flat-square)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=flat-square)
-![License](https://img.shields.io/badge/License-Private-red?style=flat-square)
+![License](https://img.shields.io/badge/License-GPL--3.0-blue?style=flat-square)
 
 ---
 
