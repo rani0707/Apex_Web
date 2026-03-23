@@ -83,7 +83,7 @@
     {
       "id": "9",
       "category": "보안",
-      "title": "악성 URL 분류 대시보드",
+      "title": "테스트용 악성 URL 분류 대시보드",
       "description": "수집된 URL 데이터를 기반으로 악성 여부를 시각적으로 분석하고 관리하는 보안 대시보드",
       "tags": ["Python", "PyTorch", "FastAPI"],
       "year": "2026",
