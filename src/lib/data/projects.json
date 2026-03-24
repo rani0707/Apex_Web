@@ -3,19 +3,19 @@
     {
       "id": "1",
       "category": "AI",
-      "title": "보안 로그 이상 탐지 시스템",
-      "description": "머신러닝 기반 보안 로그 분석 및 이상징후 자동 탐지 시스템 개발",
-      "tags": ["Python", "TensorFlow", "ELK Stack"],
+      "title": "테스트 1",
+      "description": "테스트용 프로젝트 설명 1",
+      "tags": ["Test", "Sample", "Demo"],
       "year": "2025",
       "status": "진행중",
-      "url": "https://github.com/your-org/log-anomaly-detector"
+      "url": "https://github.com/mju-apex/phishing-detector"
     },
     {
       "id": "2",
       "category": "보안",
-      "title": "IoT 취약점 자동 분석 도구",
-      "description": "임베디드 장치 및 IoT 기기의 네트워크 취약점을 자동으로 스캐닝하는 도구",
-      "tags": ["Python", "Scapy", "Nmap"],
+      "title": "테스트 2",
+      "description": "테스트용 프로젝트 설명 2",
+      "tags": ["Test", "Sample", "Demo"],
       "year": "2025",
       "status": "완료",
       "url": ""
@@ -23,19 +23,19 @@
     {
       "id": "3",
       "category": "개발",
-      "title": "APEX 커뮤니티 플랫폼",
-      "description": "동아리원을 위한 지식 공유 및 프로젝트 관리 커뮤니티 웹사이트",
-      "tags": ["Next.js", "PostgreSQL", "Docker"],
+      "title": "테스트 3",
+      "description": "테스트용 프로젝트 설명 3",
+      "tags": ["Test", "Sample", "Demo"],
       "year": "2025",
       "status": "완료",
-      "url": "https://github.com/mju-apex/community"
+      "url": ""
     },
     {
       "id": "4",
       "category": "AI",
-      "title": "멀티모달 LLM 보안 어시스턴트",
-      "description": "보안 취약점 코드 분석 및 패치 추천이 가능한 LLM 기반 어시스턴트",
-      "tags": ["Python", "LangChain", "OpenAI API"],
+      "title": "테스트 4",
+      "description": "테스트용 프로젝트 설명 4",
+      "tags": ["Test", "Sample", "Demo"],
       "year": "2026",
       "status": "진행중",
       "url": ""
@@ -43,29 +43,29 @@
     {
       "id": "5",
       "category": "보안",
-      "title": "CTF Challenge Platform",
-      "description": "동아리 내부 CTF 워게임 플랫폼 및 실시간 랭킹 시스템",
-      "tags": ["Django", "React", "Kubernetes"],
+      "title": "테스트 5",
+      "description": "테스트용 프로젝트 설명 5",
+      "tags": ["Test", "Sample", "Demo"],
       "year": "2024",
       "status": "완료",
-      "url": "https://github.com/mju-apex/ctf-platform"
+      "url": ""
     },
     {
       "id": "6",
       "category": "개발",
-      "title": "실시간 코드 리뷰 시스템",
-      "description": "PR 기반 자동 보안 취약점 분석 및 코드 품질 리뷰 파이프라인",
-      "tags": ["Node.js", "GitHub Actions", "Vue.js"],
+      "title": "테스트 6",
+      "description": "테스트용 프로젝트 설명 6",
+      "tags": ["Test", "Sample", "Demo"],
       "year": "2024",
       "status": "완료",
-      "url": "https://github.com/mju-apex/code-review"
+      "url": ""
     },
     {
       "id": "7",
       "category": "보안",
-      "title": "블록체인 스마트 계약 감사 도구",
-      "description": "이더리움 스마트 계약의 보안 취약점을 자동 탐지하는 정적 분석 도구",
-      "tags": ["Solidity", "Slither", "Python"],
+      "title": "테스트 7",
+      "description": "테스트용 프로젝트 설명 7",
+      "tags": ["Test", "Sample", "Demo"],
       "year": "2026",
       "status": "진행중",
       "url": ""
@@ -73,9 +73,9 @@
     {
       "id": "8",
       "category": "AI",
-      "title": "피싱 사이트 실시간 탐지 시스템",
-      "description": "URL 및 페이지 콘텐츠 분석을 통한 피싱 사이트 실시간 판별 AI 모델",
-      "tags": ["Python", "PyTorch", "FastAPI"],
+      "title": "테스트 8",
+      "description": "테스트용 프로젝트 설명 8",
+      "tags": ["Test", "Sample", "Demo"],
       "year": "2026",
       "status": "진행중",
       "url": "https://github.com/mju-apex/phishing-detector"
@@ -83,12 +83,12 @@
     {
       "id": "9",
       "category": "보안",
-      "title": "테스트용 악성 URL 분류 대시보드",
-      "description": "수집된 URL 데이터를 기반으로 악성 여부를 시각적으로 분석하고 관리하는 보안 대시보드",
-      "tags": ["Python", "PyTorch", "FastAPI"],
+      "title": "테스트 9",
+      "description": "테스트용 프로젝트 설명 9",
+      "tags": ["Test", "Sample", "Demo"],
       "year": "2026",
       "status": "진행중",
-      "url": "https://github.com/mju-apex/phishing-detector"
+      "url": ""
     }
   ]
 }
