@@ -1,7 +1,0 @@
-name = "apex-web"
-compatibility_date = "2025-01-01"
-compatibility_flags = ["nodejs_compat"]
-
-# Cloudflare Pages 프로젝트로 배포하는 경우 pages_project를 사용합니다.
-# Workers로 직접 배포하는 경우 workers_source를 사용합니다.
-pages_build_output_dir = ".open-next/worker-assets"

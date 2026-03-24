@@ -52,10 +52,6 @@ npm run dev
 | `npm run build` | 프로덕션 빌드 |
 | `npm run start` | 프로덕션 서버 시작 (`build` 먼저 필수) |
 | `npm run security:audit` | 보안 감사 (권장사항 이상만 경고) |
-| `npm run preview` | Cloudflare 로컬 미리보기 (`wrangler dev`) |
-| `npm run deploy` | Cloudflare Workers에 직접 배포 |
-| `npm run upload` | Cloudflare Pages에 업로드 |
-| `npm run cf-typegen` | Cloudflare 환경 타입 생성 |
 
 ---
 
@@ -213,46 +209,22 @@ src/
 
 ---
 
-## 배포하는 법 (Cloudflare Workers + OpenNext)
+## 배포하는 법 (Vercel 기준)
 
 GitHub에 푸시하면 **GitHub Actions로 자동 배포**되도록 설정되어 있습니다.
 
 ### 처음 세팅할 때 필요한 것
 
-1. [Cloudflare](https://dash.cloudflare.com/)에서 GitHub 계정으로 로그인
-2. "Workers & Pages" → "Create application" → "Pages" → "Connect to Git" → GitHub 레포지토리 선택
-3. 프로젝트 이름은 `apex-web`으로 설정
-4. **Build configuration**:
-   - **Framework preset**: None
-   - **Build command**: `npm run build`
-   - **Build output directory**: `.open-next/worker-assets`
-5. **Environment variables** ( Workers & Pages → Settings → Environment Variables):
-   - `NODE_VERSION`: `22`
-6. GitHub 레포지토리의 **Settings → Secrets and variables → Actions**에서 아래 시크릿을 등록:
-   - `CLOUDFLARE_API_TOKEN` — Cloudflare Profile → API Tokens → "Create Token" → **Workers & Pages** 권한으로 생성
-   - `CLOUDFLARE_ACCOUNT_ID` — Cloudflare Dashboard URL에서 확인 (예: `https://dash.cloudflare.com/여기`)
+1. [Vercel](https://vercel.com)에서 GitHub 계정으로 로그인
+2. "Add New Project" → GitHub 레포지토리 선택
+3. Framework Preset이 "Next.js"로 자동 인식되는지 확인
+4. "Deploy" 버튼 클릭
+5. Vercel 대시보드에서 **Settings → General**으로 이동하여以下 세 가지 값을 **GitHub Secrets**에 등록:
+   - `VERCEL_ORG_ID` — Vercel Organization ID (`vercel deployments` 등에서 확인)
+   - `VERCEL_PROJECT_ID` — Vercel Project ID
+   - `VERCEL_TOKEN` — Vercel Access Token ([vercel.com/account/tokens](https://vercel.com/account/tokens)에서 생성)
 
 그 다음 `main` 브랜치에 푸시하면 알아서 빌드 → 배포됩니다.
-
-### 로컬에서 직접 배포하는 법
-
-```bash
-# Workers에 직접 배포 (wrangler.toml 필요)
-npm run deploy
-
-# Pages에 업로드
-npm run upload
-
-# 로컬 미리보기
-npm run preview
-```
-
-### 권장 배포 경로
-
-Cloudflare Pages에서 Next.js를 배포할 때 두 가지 경로가 있습니다:
-
-- **Pages (Static Export)**: `next export` 기반. SSR/서버액션/미들웨어 미지원
-- **Workers + OpenNext (현재 방식)**: `@opennextjs/cloudflare`로 풀 Next.js(SSR, Server Actions, Middleware)를 Cloudflare Workers에 배포. 이 프로젝트는 **Workers + OpenNext** 방식을 사용합니다.
 
 ---
 

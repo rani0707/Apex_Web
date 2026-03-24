@@ -33,7 +33,5 @@ next-env.d.ts
 # OpenNext
 .open-next
 
-# Cloudflare
-.wrangler
-cloudflare-env.d.ts
-
+# Vercel
+.vercel
