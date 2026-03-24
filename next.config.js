@@ -2,10 +2,6 @@
 const nextConfig = {
   poweredByHeader: false,
 
-  serverActions: {
-    allowedOrigins: ['apex-web.pages.dev', 'apex-web-*.pages.dev'],
-  },
-
   async redirects() {
     return [
       {
