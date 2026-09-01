@@ -93,13 +93,17 @@ echo "Done."
 # ── 5. Clone the repository ────────────────────────────────────────
 step "[5/8] Preparing $APP_DIR ..."
 if [[ "$APP_DIR" == /home/* || "$APP_DIR" == /root/* ]]; then
-  cat <<EOF
+  if [[ "$FORCE" != "1" ]]; then
+    cat <<EOF
 ⚠️  NOTE: APP_DIR=$APP_DIR is under a user home directory.
    All files will be owned by 'apex-runner'. Your normal account will
    no longer have write access to this directory after installation.
 EOF
-  read -r -p "Continue? [y/N] " reply
-  [[ "$reply" =~ ^[Yy]$ ]] || { echo "Aborted."; exit 1; }
+    read -r -p "Continue? [y/N] " reply
+    [[ "$reply" =~ ^[Yy]$ ]] || { echo "Aborted."; exit 1; }
+  else
+    echo "FORCE=1 set — skipping confirmation."
+  fi
 fi
 
 if [ -d "$APP_DIR" ]; then
