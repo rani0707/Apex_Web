@@ -116,10 +116,12 @@ if [ -d "$APP_DIR" ]; then
     exit 1
   fi
 else
-  # Create the leaf as apex-runner so git can write into it directly.
+  # Create the directory tree as root (e.g. /opt needs root), then hand it
+  # to apex-runner before cloning so git can write into it directly.
   parent="$(dirname "$APP_DIR")"
   mkdir -p "$parent"
-  sudo -u "$RUNNER_USER" mkdir -p "$APP_DIR"
+  mkdir -p "$APP_DIR"
+  chown "$RUNNER_USER:$RUNNER_USER" "$APP_DIR"
   sudo -u "$RUNNER_USER" git clone \
     "https://github.com/$GITHUB_USER/$GITHUB_REPO.git" "$APP_DIR"
 fi
