@@ -50,7 +50,10 @@ echo "Done."
 # ── 2. Install Node.js 20 + utilities ───────────────────────────────
 step "[2/8] Installing Node.js 20 + utilities..."
 apt-get install -y ca-certificates curl gnupg ufw wget git jq sudo
-if ! command -v node >/dev/null 2>&1; then
+# Always install Node.js 20 from nodesource — Next.js 16 requires >=20.9.0,
+# and Ubuntu's default nodejs (v18) is too old.
+if ! command -v node >/dev/null 2>&1 \
+   || [ "$(node -v | sed 's/^v//' | cut -d. -f1)" -lt 20 ]; then
   curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
   apt-get install -y nodejs
 fi
