@@ -46,7 +46,10 @@ const nextConfig = {
               "default-src 'self' https:",
               // 'unsafe-inline' is needed for Next.js inline boot scripts in this setup;
               // tighten further by switching to nonce-based CSP if requirements allow.
-              "script-src 'self' 'unsafe-inline'",
+              // static.cloudflareinsights.com is required because Cloudflare
+              // Web Analytics injects its beacon script at the edge.
+              "script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com",
+              "script-src-elem 'self' 'unsafe-inline' https://static.cloudflareinsights.com",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https:",
               "font-src 'self' data:",
