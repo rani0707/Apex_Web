@@ -94,30 +94,31 @@ echo "Done."
 step "[5/8] Preparing $APP_DIR ..."
 if [[ "$APP_DIR" == /home/* || "$APP_DIR" == /root/* ]]; then
   cat <<EOF
-⚠️  WARNING: APP_DIR=$APP_DIR lives under a user's home directory.
-   The runner service will be owned by 'apex-runner', and any pre-existing
-   files there will be chown'd to that user (you will lose write access as
-   your normal account). If you prefer a clean isolated path, re-run with
-   APP_DIR unset (default: /opt/apex-web).
+⚠️  NOTE: APP_DIR=$APP_DIR is under a user home directory.
+   All files will be owned by 'apex-runner'. Your normal account will
+   no longer have write access to this directory after installation.
 EOF
-  read -r -p "Continue with $APP_DIR anyway? [y/N] " reply
-  [[ "$reply" =~ ^[Yy]$ ]] || { echo "Aborted. Re-run without APP_DIR to use /opt/apex-web."; exit 1; }
+  read -r -p "Continue? [y/N] " reply
+  [[ "$reply" =~ ^[Yy]$ ]] || { echo "Aborted."; exit 1; }
 fi
 
 if [ -d "$APP_DIR" ]; then
   if [ -d "$APP_DIR/.git" ]; then
-    echo "Existing git repo found at $APP_DIR — reusing and updating remote."
+    echo "Existing git repo found at $APP_DIR — reusing."
+    # Fix remote URL and fetch latest (even if owned by another user, chown below fixes that).
     sudo -u "$RUNNER_USER" git -C "$APP_DIR" remote set-url origin \
-      "https://github.com/$GITHUB_USER/$GITHUB_REPO.git"
-    sudo -u "$RUNNER_USER" git -C "$APP_DIR" fetch --prune
+      "https://github.com/$GITHUB_USER/$GITHUB_REPO.git" 2>/dev/null \
+      || git -C "$APP_DIR" remote set-url origin \
+         "https://github.com/$GITHUB_USER/$GITHUB_REPO.git"
+    sudo -u "$RUNNER_USER" git -C "$APP_DIR" fetch --prune 2>/dev/null \
+      || git -C "$APP_DIR" fetch --prune
   else
     echo "ERROR: $APP_DIR exists but is not a git repo." >&2
     echo "       Remove it or set APP_DIR to an empty path before re-running." >&2
     exit 1
   fi
 else
-  # Create the directory tree as root (e.g. /opt needs root), then hand it
-  # to apex-runner before cloning so git can write into it directly.
+  # Create the directory tree as root, hand it to apex-runner, then clone.
   parent="$(dirname "$APP_DIR")"
   mkdir -p "$parent"
   mkdir -p "$APP_DIR"
@@ -126,7 +127,7 @@ else
     "https://github.com/$GITHUB_USER/$GITHUB_REPO.git" "$APP_DIR"
 fi
 
-# Ensure apex-runner owns the tree (handles pre-existing repos owned by another user).
+# Ensure apex-runner owns the tree (handles dirs owned by root or rani0707).
 chown -R "$RUNNER_USER:$RUNNER_USER" "$APP_DIR"
 echo "Done."
 
