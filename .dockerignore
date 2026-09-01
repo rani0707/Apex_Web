@@ -1,0 +1,37 @@
+# Files that should never end up in the Docker image
+# (keeps secrets, deploy artefacts, and dev tooling out of the build context)
+.git
+.gitignore
+.github
+.next
+.next/
+node_modules
+node_modules/
+coverage
+out
+.open-next
+.vercel
+build
+
+# Server-only artefacts
+deploy/
+server-setup.sh
+deploy.sh
+Dockerfile
+docker-compose.yml
+
+# Local env / secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+*.p12
+
+# Editor / OS junk
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.log

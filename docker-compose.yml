@@ -1,0 +1,52 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ghcr.io/rani0707/apex-web:latest
+    container_name: apex-web
+    # Watchtower will only manage containers labelled com.apex.autoupdate=true.
+    labels:
+      - "com.apex.autoupdate=true"
+    ports:
+      - "20983:20983"
+    restart: unless-stopped
+    read_only: false  # Next.js standalone needs write to .next/cache at runtime
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:20983"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    environment:
+      - NODE_ENV=production
+      - NEXT_TELEMETRY_DISABLED=1
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+  watchtower:
+    # Pinned to a known version for reproducibility; rotate deliberately.
+    image: containrrr/watchtower:1.7.1
+    container_name: apex-watchtower
+    # Read-only Docker socket reduces blast radius if watchtower is compromised.
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /root/.docker/config.json:/config.json:ro
+    environment:
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_POLL_INTERVAL=300
+      - WATCHTOWER_INCLUDE_STOPPED=false
+      - WATCHTOWER_LABEL_ENABLE=true
+      - WATCHTOWER_SCOPE=apex-web
+      - WATCHTOWER_NOTIFICATIONS=shoutrrr
+      - WATCHTOWER_NOTIFICATION_URL=${WATCHTOWER_NOTIFICATION_URL:-}
+      - WATCHTOWER_DEBUG=false
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"

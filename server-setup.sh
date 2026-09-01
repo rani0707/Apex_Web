@@ -1,24 +1,28 @@
 #!/bin/bash
 # ========================================================================
-#  APEX Web — Ubuntu 24.04 Initial Server Setup
+#  APEX Web — Ubuntu 24.04 Initial Server Setup (Docker path)
 #  Run this ONCE on a fresh Ubuntu 24.04 server as root (sudo su).
 #
 #  This installs:
-#    • Node.js 20 + system deps
 #    • UFW firewall (22, 80, 443, 20983)
-#    • A dedicated `apex-runner` user (NOT root)
+#    • Docker Engine + docker compose plugin
+#    • A dedicated `apex-runner` user (NOT root) — runs the GitHub Actions runner
 #    • The app repository at /opt/apex-web
-#    • apex-web.service (systemd)
+#    • The apex-web container via docker compose (pulls ghcr.io/<user>/apex-web:latest)
+#    • Watchtower — auto-pulls new GHCR images every 5 minutes as backstop
 #    • A self-hosted GitHub Actions runner at /opt/actions-runner
 #      (this is what makes "git push → live deploy" work without SSH keys)
 #
-#  Required env var (export before running, or pass inline):
+#  Required env vars:
 #    RUNNER_TOKEN     — Registration token from
 #                       https://github.com/<OWNER>/<REPO>/settings/actions/runners/new
-#                       (valid 1 hour; re-run this script with a fresh token if it expires)
+#                       (valid 1 hour; re-run with a fresh token if expired)
+#    GHCR_USER        — GitHub username (defaults to GITHUB_USER)
+#    GHCR_TOKEN       — PAT with read:packages scope, used for GHCR login
+#                       (create at https://github.com/settings/tokens)
 #
 #  Optional:
-#    GITHUB_USER      — defaults to YOUR_GITHUB_USERNAME
+#    GITHUB_USER      — defaults to rani0707
 #    GITHUB_REPO      — defaults to Apex_Web
 #    APP_DIR          — defaults to /opt/apex-web
 #    RUNNER_NAME      — defaults to apex-vps-<hostname>
@@ -26,7 +30,7 @@
 
 set -euo pipefail
 
-GITHUB_USER="${GITHUB_USER:-YOUR_GITHUB_USERNAME}"
+GITHUB_USER="${GITHUB_USER:-rani0707}"
 GITHUB_REPO="${GITHUB_REPO:-Apex_Web}"
 APP_DIR="${APP_DIR:-/opt/apex-web}"
 RUNNER_DIR="${RUNNER_DIR:-/opt/actions-runner}"
@@ -34,6 +38,8 @@ RUNNER_USER="${RUNNER_USER:-apex-runner}"
 RUNNER_NAME="${RUNNER_NAME:-apex-vps-$(hostname)}"
 RUNNER_LABELS="${RUNNER_LABELS:-self-hosted,apex-prod,linux,x64}"
 RUNNER_TOKEN="${RUNNER_TOKEN:-}"
+GHCR_USER="${GHCR_USER:-$GITHUB_USER}"
+GHCR_TOKEN="${GHCR_TOKEN:-}"
 
 step() { printf "\n\033[1;34m=== %s ===\033[0m\n" "$1"; }
 fail() { printf "\n\033[1;31m✗ %s\033[0m\n" "$*" >&2; exit 1; }
@@ -47,22 +53,9 @@ export DEBIAN_FRONTEND=noninteractive
 apt-get update && apt-get -y upgrade
 echo "Done."
 
-# ── 2. Install Node.js 20 + utilities ───────────────────────────────
-step "[2/8] Installing Node.js 20 + utilities..."
+# ── 2. Firewall + utilities ────────────────────────────────────────
+step "[2/8] Configuring UFW and utilities..."
 apt-get install -y ca-certificates curl gnupg ufw wget git jq sudo
-# Always install Node.js 20 from nodesource — Next.js 16 requires >=20.9.0,
-# and Ubuntu's default nodejs (v18) is too old.
-if ! command -v node >/dev/null 2>&1 \
-   || [ "$(node -v | sed 's/^v//' | cut -d. -f1)" -lt 20 ]; then
-  curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-  apt-get install -y nodejs
-fi
-node -v
-npm -v
-echo "Done."
-
-# ── 3. Firewall ─────────────────────────────────────────────────────
-step "[3/8] Configuring UFW..."
 ufw --force reset
 ufw default deny incoming
 ufw default allow outgoing
@@ -74,20 +67,36 @@ ufw --force enable
 ufw status verbose
 echo "Done."
 
+# ── 3. Install Docker Engine + compose plugin ──────────────────────
+step "[3/8] Installing Docker Engine + compose plugin..."
+install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+  | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+chmod a+r /etc/apt/keyrings/docker.gpg
+. /etc/os-release
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+https://download.docker.com/linux/ubuntu $VERSION_CODENAME stable" \
+  > /etc/apt/sources.list.d/docker.list
+apt-get update
+apt-get install -y docker-ce docker-ce-cli containerd.io \
+                   docker-buildx-plugin docker-compose-plugin
+docker --version
+docker compose version
+echo "Done."
+
 # ── 4. Create the apex-runner user ──────────────────────────────────
 step "[4/8] Creating user '$RUNNER_USER'..."
 if ! id "$RUNNER_USER" >/dev/null 2>&1; then
   adduser --disabled-password --gecos "" "$RUNNER_USER"
 fi
-# Allow this user to restart the apex-web service without a password.
-# This is the ONLY sudo capability the runner gets.
+# Allow passwordless `docker compose` (runner needs it for deploy.sh).
+usermod -aG docker "$RUNNER_USER"
+# Also allow this user to interact with docker via sudo as fallback.
 cat > /etc/sudoers.d/apex-runner <<EOF
 # Managed by server-setup.sh — do not edit by hand.
 $RUNNER_USER ALL=(ALL) NOPASSWD: \\
-  /usr/bin/systemctl restart apex-web, \\
-  /usr/bin/systemctl status apex-web, \\
-  /usr/bin/systemctl is-active apex-web, \\
-  /usr/bin/journalctl -u apex-web *
+  /usr/bin/docker, \\
+  /usr/bin/docker compose
 EOF
 chmod 440 /etc/sudoers.d/apex-runner
 visudo -c -f /etc/sudoers.d/apex-runner >/dev/null
@@ -95,76 +104,46 @@ echo "Done."
 
 # ── 5. Clone the repository ────────────────────────────────────────
 step "[5/8] Preparing $APP_DIR ..."
-if [[ "$APP_DIR" == /home/* || "$APP_DIR" == /root/* ]]; then
-  if [[ "${FORCE:-0}" != "1" && -t 0 ]]; then
-    cat <<EOF
-⚠️  NOTE: APP_DIR=$APP_DIR is under a user home directory.
-   All files will be owned by 'apex-runner'. Your normal account will
-   no longer have write access to this directory after installation.
-EOF
-    read -r -p "Continue? [y/N] " reply
-    [[ "$reply" =~ ^[Yy]$ ]] || { echo "Aborted. (Re-run with FORCE=1 to skip this prompt.)"; exit 1; }
-  else
-    if [[ "${FORCE:-0}" == "1" ]]; then
-      echo "FORCE=1 — skipping confirmation."
-    else
-      echo "Non-interactive stdin detected — skipping confirmation (set FORCE=1 explicitly to confirm intent)."
-    fi
-  fi
-fi
-
 if [ -d "$APP_DIR" ]; then
   if [ -d "$APP_DIR/.git" ]; then
     echo "Existing git repo found at $APP_DIR — reusing."
-    # Fix remote URL and fetch latest (even if owned by another user, chown below fixes that).
-    sudo -u "$RUNNER_USER" git -C "$APP_DIR" remote set-url origin \
-      "https://github.com/$GITHUB_USER/$GITHUB_REPO.git" 2>/dev/null \
-      || git -C "$APP_DIR" remote set-url origin \
-         "https://github.com/$GITHUB_USER/$GITHUB_REPO.git"
-    sudo -u "$RUNNER_USER" git -C "$APP_DIR" fetch --prune 2>/dev/null \
-      || git -C "$APP_DIR" fetch --prune
+    git -C "$APP_DIR" remote set-url origin \
+      "https://github.com/$GITHUB_USER/$GITHUB_REPO.git" 2>/dev/null || true
+    git -C "$APP_DIR" fetch --prune
   else
-    # Directory exists but isn't a git repo (user copied files manually).
-    # Back it up out of the way and clone fresh.
     BACKUP="$APP_DIR.bak.$(date +%s)"
     echo "Existing files at $APP_DIR are not a git repo — moving to $BACKUP ..."
     mv "$APP_DIR" "$BACKUP"
-    parent="$(dirname "$APP_DIR")"
-    mkdir -p "$parent"
     mkdir -p "$APP_DIR"
-    chown "$RUNNER_USER:$RUNNER_USER" "$APP_DIR"
     git clone "https://github.com/$GITHUB_USER/$GITHUB_REPO.git" "$APP_DIR"
   fi
 else
-  # Create the directory tree as root (parent may be owned by another user),
-  # then clone as root (avoids apex-runner needing write to the parent dir).
   parent="$(dirname "$APP_DIR")"
   mkdir -p "$parent"
   mkdir -p "$APP_DIR"
   git clone "https://github.com/$GITHUB_USER/$GITHUB_REPO.git" "$APP_DIR"
 fi
-
-# Ensure apex-runner owns the tree (handles dirs owned by root or rani0707).
 chown -R "$RUNNER_USER:$RUNNER_USER" "$APP_DIR"
 echo "Done."
 
-# ── 6. Install apex-web systemd service ─────────────────────────────
-step "[6/8] Installing systemd unit..."
-mkdir -p /var/log/apex-web
-chown "$RUNNER_USER:$RUNNER_USER" /var/log/apex-web
-install -m 0644 "$APP_DIR/deploy/apex-web.service" /etc/systemd/system/apex-web.service
-# Patch the default path baked into the unit file so it matches APP_DIR.
-sed -i "s|/opt/apex-web|$APP_DIR|g" /etc/systemd/system/apex-web.service
-# Allow the service to write into the actual app dir (overrides ProtectSystem=strict).
-sed -i "s|ReadWritePaths=/opt/apex-web|ReadWritePaths=$APP_DIR|g" /etc/systemd/system/apex-web.service
-# When APP_DIR lives under /home or /root, ProtectHome=true would block it.
-if [[ "$APP_DIR" == /home/* || "$APP_DIR" == /root/* ]]; then
-  sed -i 's|^ProtectHome=true|# ProtectHome=true  (APP_DIR under /home — disabled by server-setup.sh)|' \
-    /etc/systemd/system/apex-web.service
-  echo "APP_DIR is under /home — ProtectHome disabled for apex-web.service."
+# ── 6. GHCR login + start containers (web + watchtower) ────────────
+step "[6/8] Authenticating to GHCR and starting containers..."
+if [ -z "$GHCR_TOKEN" ]; then
+  fail "GHCR_TOKEN is required. Create a PAT at https://github.com/settings/tokens with 'read:packages' scope, then re-run with GHCR_TOKEN=<pat>."
 fi
-systemctl daemon-reload
-systemctl enable apex-web.service
+# Persist the GHCR login so deploy.sh (run by apex-runner) doesn't have to re-login.
+mkdir -p /root/.docker
+echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin >/dev/null
+cp /root/.docker/config.json "$APP_DIR/.docker-config.json"
+chown "$RUNNER_USER:$RUNNER_USER" "$APP_DIR/.docker-config.json"
+chmod 600 "$APP_DIR/.docker-config.json"
+
+# Pull + start the web service (Watchtower starts too via docker-compose).
+cd "$APP_DIR"
+docker compose pull web
+docker compose up -d --remove-orphans
+sleep 3
+docker compose ps
 echo "Done."
 
 # ── 7. Install self-hosted GitHub Actions runner ───────────────────
@@ -221,19 +200,19 @@ systemctl enable "actions.runner.${GITHUB_USER}-${GITHUB_REPO}.${RUNNER_NAME}.se
 systemctl start  "actions.runner.${GITHUB_USER}-${GITHUB_REPO}.${RUNNER_NAME}.service"
 echo "Done."
 
-# ── 8. Build & start apex-web ──────────────────────────────────────
-step "[8/8] Building & starting apex-web..."
-cd "$APP_DIR"
-export NEXT_TELEMETRY_DISABLED=1
-sudo -u "$RUNNER_USER" npm ci --ignore-scripts
-sudo -u "$RUNNER_USER" npm run build
-systemctl restart apex-web
-sleep 3
-systemctl is-active --quiet apex-web \
-  && echo "✓ apex-web is active." \
-  || { echo "apex-web failed to start:"; journalctl -u apex-web -n 100 --no-pager; exit 1; }
+# ── 8. Final health check ──────────────────────────────────────────
+step "[8/8] Health check..."
+sleep 5
+HEALTH_URL="http://127.0.0.1:20983"
+if wget -q --spider "$HEALTH_URL" 2>/dev/null; then
+  echo "✓ apex-web responded at $HEALTH_URL"
+else
+  echo "✗ apex-web not responding — last 50 log lines:"
+  cd "$APP_DIR"
+  docker compose logs --tail=50 web || true
+  exit 1
+fi
 
-# ── Done ────────────────────────────────────────────────────────────
 EXT_IP=$(curl -s --max-time 5 https://api.ipify.org || echo "<server-ip>")
 cat <<EOF
 
@@ -243,17 +222,20 @@ cat <<EOF
   ✓ Runner dir    : $RUNNER_DIR
   ✓ Runner name   : $RUNNER_NAME
   ✓ Runner labels : $RUNNER_LABELS
+  ✓ Stack         : Docker (web + Watchtower)
 
-  Auto-deploy is now wired up.
+  Auto-deploy is now wired up (DOCKER path).
 
   • Push to main on github.com/$GITHUB_USER/$GITHUB_REPO
   • The Build & Verify job runs on GitHub-hosted runners
-  • The Deploy job runs on THIS server (via the self-hosted runner)
-  • deploy.sh rebuilds and restarts apex-web
-  • No SSH keys, no secrets in GitHub Actions.
+  • The Push Image job pushes ghcr.io/$GHCR_USER/apex-web:latest
+  • The Deploy job (self-hosted) runs ./deploy.sh on THIS server:
+      docker compose pull && docker compose up -d
+  • Watchtower also polls GHCR every 5 minutes as a backstop.
 
   Logs:
-    sudo journalctl -u apex-web -f
+    cd $APP_DIR && docker compose logs -f web
+    cd $APP_DIR && docker compose logs -f watchtower
     sudo journalctl -u actions.runner.* -f
 
   Manual redeploy:
