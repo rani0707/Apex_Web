@@ -130,17 +130,15 @@ if [ -d "$APP_DIR" ]; then
     mkdir -p "$parent"
     mkdir -p "$APP_DIR"
     chown "$RUNNER_USER:$RUNNER_USER" "$APP_DIR"
-    sudo -u "$RUNNER_USER" git clone \
-      "https://github.com/$GITHUB_USER/$GITHUB_REPO.git" "$APP_DIR"
+    git clone "https://github.com/$GITHUB_USER/$GITHUB_REPO.git" "$APP_DIR"
   fi
 else
-  # Create the directory tree as root, hand it to apex-runner, then clone.
+  # Create the directory tree as root (parent may be owned by another user),
+  # then clone as root (avoids apex-runner needing write to the parent dir).
   parent="$(dirname "$APP_DIR")"
   mkdir -p "$parent"
   mkdir -p "$APP_DIR"
-  chown "$RUNNER_USER:$RUNNER_USER" "$APP_DIR"
-  sudo -u "$RUNNER_USER" git clone \
-    "https://github.com/$GITHUB_USER/$GITHUB_REPO.git" "$APP_DIR"
+  git clone "https://github.com/$GITHUB_USER/$GITHUB_REPO.git" "$APP_DIR"
 fi
 
 # Ensure apex-runner owns the tree (handles dirs owned by root or rani0707).
