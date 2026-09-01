@@ -121,9 +121,17 @@ if [ -d "$APP_DIR" ]; then
     sudo -u "$RUNNER_USER" git -C "$APP_DIR" fetch --prune 2>/dev/null \
       || git -C "$APP_DIR" fetch --prune
   else
-    echo "ERROR: $APP_DIR exists but is not a git repo." >&2
-    echo "       Remove it or set APP_DIR to an empty path before re-running." >&2
-    exit 1
+    # Directory exists but isn't a git repo (user copied files manually).
+    # Back it up out of the way and clone fresh.
+    BACKUP="$APP_DIR.bak.$(date +%s)"
+    echo "Existing files at $APP_DIR are not a git repo — moving to $BACKUP ..."
+    mv "$APP_DIR" "$BACKUP"
+    parent="$(dirname "$APP_DIR")"
+    mkdir -p "$parent"
+    mkdir -p "$APP_DIR"
+    chown "$RUNNER_USER:$RUNNER_USER" "$APP_DIR"
+    sudo -u "$RUNNER_USER" git clone \
+      "https://github.com/$GITHUB_USER/$GITHUB_REPO.git" "$APP_DIR"
   fi
 else
   # Create the directory tree as root, hand it to apex-runner, then clone.
