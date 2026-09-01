@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ArrowUpRight } from 'lucide-react';
 import styles from './Projects.module.css';
 import type { Project } from '@/lib/fetchers';
+import { sanitizeExternalUrl } from '@/lib/url';
 
 interface Props {
   projects: Project[];
@@ -18,6 +19,8 @@ export default function Projects({ projects }: Props) {
   const filtered = active === '전체'
     ? projects
     : projects.filter((p) => p.category === active);
+
+  const safeUrlFor = (raw: string) => sanitizeExternalUrl(raw);
 
   return (
     <section id="projects" className={styles.section}>
@@ -66,9 +69,9 @@ export default function Projects({ projects }: Props) {
                     <span key={tag} className={styles.tag}>{tag}</span>
                   ))}
                 </div>
-                {project.url && (
+                {safeUrlFor(project.url) && (
                   <a
-                    href={project.url}
+                    href={safeUrlFor(project.url) as string}
                     target="_blank"
                     rel="noopener noreferrer"
                     className={styles.linkBtn}

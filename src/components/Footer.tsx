@@ -1,11 +1,14 @@
 import styles from './Footer.module.css';
 import { Mail } from 'lucide-react';
+import { sanitizeMailto } from '@/lib/url';
 
 interface Props {
   contactEmail: string;
 }
 
 export default function Footer({ contactEmail }: Props) {
+  const safeMailto = sanitizeMailto(contactEmail);
+
   return (
     <footer className={styles.footer}>
       <div className={styles.container}>
@@ -32,12 +35,24 @@ export default function Footer({ contactEmail }: Props) {
             <div className={styles.linkGroup}>
               <h4 className={styles.linkTitle}>연락처</h4>
               <ul className={styles.linkList}>
-                <li><a href={`mailto:${contactEmail}`} className={styles.link}>{contactEmail}</a></li>
+                {safeMailto ? (
+                  <li>
+                    <a href={safeMailto} className={styles.link}>
+                      {contactEmail}
+                    </a>
+                  </li>
+                ) : (
+                  <li>
+                    <span className={styles.link}>연락처 정보가 설정되지 않았습니다.</span>
+                  </li>
+                )}
               </ul>
               <div className={styles.socials}>
-                <a href={`mailto:${contactEmail}`} className={styles.social} aria-label="이메일">
-                  <Mail size={18} strokeWidth={1.5} />
-                </a>
+                {safeMailto && (
+                  <a href={safeMailto} className={styles.social} aria-label="이메일">
+                    <Mail size={18} strokeWidth={1.5} />
+                  </a>
+                )}
               </div>
             </div>
           </div>

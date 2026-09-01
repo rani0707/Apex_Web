@@ -95,7 +95,7 @@ src/
 
 **코드 수정 없이 JSON만으로 콘텐츠를 업데이트할 수 있는 구조입니다.** 이를 통해 웹사이트를 빠르고 편리하게 관리할 수 있습니다.
 
-### 📄 about.json — 동아리 소개
+### about.json — 동아리 소개
 
 ```json
 {
@@ -116,7 +116,7 @@ src/
 - `title`: 카드 제목 (AI / 보안 / 개발)
 - `desc`: 해당 분야에 대한 설명
 
-### 📄 activities.json — 활동 트랙
+### activities.json — 활동 트랙
 
 ```json
 {
@@ -138,7 +138,7 @@ src/
 - `tags`: 기술 스택 태그들 (배열)
 - `desc`: 트랙에 대한 자세한 설명
 
-### 📄 projects.json — 프로젝트
+### projects.json — 프로젝트
 
 ```json
 {
@@ -162,7 +162,7 @@ src/
 - `url`: GitHub 링크 (없으면 빈 문자열 `""`)
 - `id`: 고유 식별자 (중복 안 되면 아무거나 OK)
 
-### 📄 awards.json — 수상 이력
+### awards.json — 수상 이력
 
 ```json
 {
@@ -179,7 +179,7 @@ src/
 
 `awards.json`에 항목이 많아질수록 테이블이 길어지며, 수상 항목은 필요에 따라 자유롭게 추가·수정·삭제할 수 있습니다.
 
-### 📄 recruit.json — 모집 안내
+### recruit.json — 모집 안내
 
 ```json
 {
@@ -196,8 +196,7 @@ src/
   ],
   "perks": [
     { "label": "멘토링", "icon": "users", "show": true },
-    { "label": "전공동아리실 제공", "icon": "mapPin", "show": true },
-    ...
+    { "label": "전공동아리실 제공", "icon": "mapPin", "show": true }
   ]
 }
 ```
@@ -209,37 +208,166 @@ src/
 
 ---
 
-## 배포하는 법 (Vercel 기준)
+## 배포하는 법 — GitHub Actions Self-Hosted Runner (SSH 키 불필요)
 
-GitHub에 푸시하면 **GitHub Actions로 자동 배포**되도록 설정되어 있습니다.
+GitHub `main` 브랜치에 푸시하면 **VPS에 설치된 self-hosted GitHub Actions 러너**가 빌드·배포를 직접 수행합니다. SSH 키를 GitHub에 저장할 필요가 없습니다 — 러너가 GitHub에 아웃바운드로 연결하기 때문입니다.
 
-### 처음 세팅할 때 필요한 것
+### 전체 동작 흐름
 
-1. [Vercel](https://vercel.com)에서 GitHub 계정으로 로그인
-2. "Add New Project" → GitHub 레포지토리 선택
-3. Framework Preset이 "Next.js"로 자동 인식되는지 확인
-4. "Deploy" 버튼 클릭
-5. Vercel 대시보드에서 **Settings → General**으로 이동하여以下 세 가지 값을 **GitHub Secrets**에 등록:
-   - `VERCEL_ORG_ID` — Vercel Organization ID (`vercel deployments` 등에서 확인)
-   - `VERCEL_PROJECT_ID` — Vercel Project ID
-   - `VERCEL_TOKEN` — Vercel Access Token ([vercel.com/account/tokens](https://vercel.com/account/tokens)에서 생성)
+```
+[로컬에서 코드 수정 → git push origin main]
+        ↓
+[GitHub Actions — Build & Verify]
+  ① ubuntu-latest 러너에서 npm ci → npm audit → npm run build
+  ② push-image : GHCR에 Docker 이미지 푸시 (Docker 경로 사용 시)
+        ↓ (build 성공)
+[Deploy job — runs-on: [self-hosted, apex-prod, linux, x64]]
+  ③ VPS 안의 self-hosted 러너가 체크아웃
+        ↓
+[deploy.sh — VPS 로컬에서 실행]
+  ④ npm ci → npm run build
+  ⑤ sudo systemctl restart apex-web
+  ⑥ wget 헬스체크
+        ↓
+[사이트 자동 업데이트 완료 — SSH 키 / GitHub Secrets 불필요]
+```
 
-그 다음 `main` 브랜치에 푸시하면 알아서 빌드 → 배포됩니다.
+---
+
+### 1단계 — VPS 초기 설정 (최초 1회)
+
+VPS(Ubuntu 24.04)에 SSH로 접속한 뒤 **러너 등록 토큰**을 준비해서 스크립트를 실행합니다.
+
+```bash
+ssh root@서버IP
+
+# 러너 등록 토큰 받기
+# 1) 브라우저에서 열기:
+#    https://github.com/<YOUR_USERNAME>/<REPO>/settings/actions/runners/new
+# 2) "Configure" 버튼 아래의 `token` 값을 그대로 복사 (1시간 유효)
+
+export GITHUB_USER="YOUR_USERNAME"
+export GITHUB_REPO="Apex_Web"
+export RUNNER_TOKEN="<복사한-토큰>"
+
+curl -fsSL https://raw.githubusercontent.com/$GITHUB_USER/$GITHUB_REPO/main/server-setup.sh \
+  | GITHUB_USER=$GITHUB_USER bash
+```
+
+스크립트가 자동으로 처리하는 것:
+
+- 시스템 패키지 업데이트
+- Node.js 20 LTS 설치
+- UFW 방화벽 (22, 80, 443, 20983 포트만 허용)
+- `apex-runner` 전용 사용자 생성 (root 아님)
+- `apex-runner`에 **apex-web 서비스 재시작 전용** passwordless sudo 부여
+- 레포지토리 `/opt/apex-web`에 클론 (소유자: `apex-runner`)
+- `apex-web.service` systemd 유닛 설치 + enable
+- `/opt/actions-runner`에 GitHub Actions self-hosted 러너 다운로드
+- 러너를 systemd 서비스로 등록 (자동 시작)
+- 초기 빌드 및 기동 + 헬스체크
+
+### 2단계 — GitHub Secrets 등록? **불필요**
+
+러너 토큰은 1시간 만료 + 레포 단위로 한정되며, **GitHub Secrets에 아무것도 저장하지 않아도** 자동 배포가 동작합니다.
+
+> 보안: GitHub에 저장된 SSH 키 / API 토큰이 없습니다. 워크플로 로그에 비밀값이 노출될 위험이 0입니다.
+
+### 3단계 — main에 푸시하면 자동 배포
+
+```bash
+git add .
+git commit -m "feat: ..."
+git push origin main
+```
+
+푸시 후:
+
+1. **Build & Verify** job — GitHub-hosted ubuntu-latest에서 type-check + build
+2. **Deploy to VPS (self-hosted)** job — VPS 안의 러너가 deploy.sh 실행
+3. 1~2분 안에 사이트가 새 버전으로 교체됨
+
+### Actions 탭에서 확인
+
+레포지토리 → **Actions** 탭에서 빌드/배포 로그를 실시간으로 확인합니다.
+러너가 오프라인이면 Settings → Actions → Runners에서 상태 확인.
+
+---
+
+### 서버에서 직접 배포하고 싶을 때
+
+```bash
+ssh root@서버IP
+cd /opt/apex-web
+sudo -u apex-runner ./deploy.sh
+```
+
+또는 systemd 경유:
+
+```bash
+ssh root@서버IP 'sudo systemctl restart apex-web'
+```
+
+### 서비스 / 러너 상태 확인
+
+```bash
+# 앱 서비스
+sudo systemctl status apex-web
+sudo journalctl -u apex-web -f --no-pager
+
+# Self-hosted 러너
+sudo systemctl status "actions.runner.*"
+sudo journalctl -u "actions.runner.*" -f --no-pager
+```
+
+### 러너 토큰이 만료된 경우
+
+토큰은 1시간짜리라 초기 설치 후에는 사용되지 않습니다. 러너는 한 번 등록되면 GitHub의 영구 자격증명을 내부적으로 보관하므로 추가 토큰이 필요 없습니다.
+
+러너를 옮기거나 재등록해야 하는 경우:
+
+```bash
+# 새 토큰 받아서
+sudo /opt/actions-runner/config.sh remove \
+#   --token <unregister-token>
+# 다시 https://github.com/<user>/<repo>/settings/actions/runners/new 에서
+# 새 토큰 받아서 register
+```
+
+### 롤백 (실수로 main에 잘못 푸시한 경우)
+
+```bash
+ssh root@서버IP
+cd /opt/apex-web
+sudo -u apex-runner git reset --hard <이전-정상-SHA>
+sudo -u apex-runner ./deploy.sh
+```
 
 ---
 
 ## 보안 설정
 
-`next.config.js`에 아래 헤더들이 이미 설정되어 있어요:
+`next.config.js`에 다음 보안 헤더가 설정되어 있습니다.
 
-- `X-DNS-Prefetch-Control: on`
-- `X-Frame-Options: SAMEORIGIN`
-- `X-Content-Type-Options: nosniff`
-- `Referrer-Policy: strict-origin-when-cross-origin`
-- `Permissions-Policy`: 카메라, 마이크, 위치 등 전부 차단
-- `Content-Security-Policy`: 기본적으로 자기 도메인만 허용, Google Docs 임베드만 예외
+| 헤더 | 값 |
+|---|---|
+| `X-DNS-Prefetch-Control` | `on` |
+| `X-Frame-Options` | `SAMEORIGIN` |
+| `X-Content-Type-Options` | `nosniff` |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` |
+| `Permissions-Policy` | 카메라·마이크·위치·결제·USB·XR 등 모두 차단 |
+| `Strict-Transport-Security` | `max-age=63072000; includeSubDomains` (2년) |
+| `Content-Security-Policy` | 자체 호스트 + HTTPS only, `unsafe-eval` 없음, `frame-ancestors 'self'` |
+| `upgrade-insecure-requests` | HTTP 요청 자동 HTTPS 전환 |
 
-추가로 CSP 건드려야 할 일 있으면 `next.config.js` 열어서 `contentSecurityPolicy` 값 수정하면 됩니다.
+추가로 적용된 보안 처리:
+
+- **외부 URL 검증** — `src/lib/url.ts`의 `sanitizeExternalUrl`로 `recruitFormUrl`/`project.url`이 화이트리스트된 HTTPS 호스트만 통과 (`javascript:` 등 차단)
+- **이메일 검증** — `Footer`의 `mailto:` 링크는 정규식 검증 통과 시에만 렌더링
+- **PR 빌드 격리** — `pull_request` 트리거에서는 이미지 푸시·SSH 배포 미실행
+- **Watchtower 스코프 제한** — 라벨 `com.apex.autoupdate=true`가 붙은 컨테이너만 갱신, Docker 소켓은 `:ro`로 마운트
+- **systemd 서비스 강화** — `NoNewPrivileges`, `PrivateTmp`, `ProtectSystem=strict`, `ProtectHome=true`
+- **시크릿 격리** — `.gitignore`에 `.env*`, `*.pem`, `*.key` 추가, `.env.example`만 예외
 
 ---
 
@@ -252,7 +380,7 @@ GitHub에 푸시하면 **GitHub Actions로 자동 배포**되도록 설정되어
 ---
 
 ## License
+
 이 프로젝트는 GPL-3.0 라이선스를 따릅니다.
 
-소스 코드는 자유롭게 복제, 수정, 활용하실 수 있습니다 :)  
-단, 해당 코드를 기반으로 한 프로젝트 역시 동일한 GPL-3.0 라이선스를 따라야 합니다.
+소스 코드는 자유롭게 복제, 수정, 활용하실 수 있습니다. 단, 해당 코드를 기반으로 한 프로젝트 역시 동일한 GPL-3.0 라이선스를 따라야 합니다.

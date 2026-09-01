@@ -11,7 +11,7 @@ services:
     ports:
       - "20983:20983"
     restart: unless-stopped
-    read_only: false  # Next.js standalone needs write to .next/cache at runtime
+    read_only: false  # Next.js needs write to .next/cache at runtime
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:20983"]
       interval: 30s

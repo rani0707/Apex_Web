@@ -4,6 +4,7 @@ import { useScrollReveal } from '@/hooks/useScrollReveal';
 import { Calendar, MapPin, Users, Clock, Bell } from 'lucide-react';
 import styles from './Recruit.module.css';
 import type { TimelineItem, Perk } from '@/lib/fetchers';
+import { sanitizeExternalUrl } from '@/lib/url';
 
 interface Props {
   timeline: TimelineItem[];
@@ -22,6 +23,7 @@ const iconMap: Record<string, React.ReactNode> = {
 
 export default function Recruit({ timeline, perks, isOpen, closedMessage, recruitFormUrl }: Props) {
   const sectionRef = useScrollReveal<HTMLElement>();
+  const safeFormUrl = sanitizeExternalUrl(recruitFormUrl);
 
   return (
     <section id="recruit" className={styles.section} ref={sectionRef.ref}>
@@ -64,12 +66,12 @@ export default function Recruit({ timeline, perks, isOpen, closedMessage, recrui
                   ))}
               </ul>
             </div>
-            {isOpen ? (
+            {isOpen && safeFormUrl ? (
               <div className={`${styles.ctaCard} reveal reveal-delay-2`}>
                 <p className={styles.ctaText}>관심이 있으신가요?</p>
                 <h3 className={styles.ctaTitle}>함께 시작해보세요.</h3>
                 <a
-                  href={recruitFormUrl}
+                  href={safeFormUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={styles.ctaBtn}
