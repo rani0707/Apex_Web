@@ -1,0 +1,32 @@
+[Unit]
+Description=APEX Web (Next.js)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Runs as the same user that owns the build output; the runner manages deploy.sh
+# and uses sudo (passwordless, limited to apex-web control) to restart this unit.
+User=apex-runner
+Group=apex-runner
+WorkingDirectory=/opt/apex-web
+Environment=NODE_ENV=production
+Environment=NEXT_TELEMETRY_DISABLED=1
+Environment=PORT=20983
+Environment=HOSTNAME=0.0.0.0
+ExecStart=/usr/bin/env node /opt/apex-web/.next/standalone/server.js
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+# Sandbox hardening. Note: if you relocate APP_DIR away from /opt,
+# server-setup.sh rewrites these paths via sed at install time.
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/apex-web /var/log/apex-web
+StandardOutput=append:/var/log/apex-web/out.log
+StandardError=append:/var/log/apex-web/err.log
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target
