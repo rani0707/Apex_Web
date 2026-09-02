@@ -381,6 +381,8 @@ sudo -u apex-runner ./deploy.sh
 
 ## License
 
-이 프로젝트는 GPL-3.0 라이선스를 따릅니다.
+이 프로젝트는 [GNU General Public License v3.0](./LICENSE) (GPL-3.0) 라이선스를 따릅니다.
 
 소스 코드는 자유롭게 복제, 수정, 활용하실 수 있습니다. 단, 해당 코드를 기반으로 한 프로젝트 역시 동일한 GPL-3.0 라이선스를 따라야 합니다.
+
+자세한 조건은 저장소 루트의 [LICENSE](./LICENSE) 파일을 참고하세요.
